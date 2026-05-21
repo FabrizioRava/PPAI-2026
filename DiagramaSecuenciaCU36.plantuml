@@ -35,8 +35,12 @@ entity "L:Empleado" as E
 entity ":Bolsin" as B
 entity ":Comision Medica" as CM
 entity ":CambioDeEstadoBolsin" as estB
+entity ":Estado" as Es
+entity ":GPS" as GPS
+entity "S:Bolsin" as SB
+entity "S:Comision Medica" as SCM
+control ":CU31" as CU
 
- 
 EB -> P: consultarUbicBolsines()
 P-> P: habilitarVentana()
 P-> G: consultarUbicBolsines() 
@@ -49,26 +53,33 @@ E -> CM: obtenerNombre()
 G-> P: mostrarNombreCM()
 
 G-> G: buscarEstadoBolsines()
-' LOOP para buscar Primero traer Bolsin, luego su CM
-'todo-
-'1. Buscar todos los bolsines
-'2. Entre esos, buscar los bolsines con CM igual al del usuario
-'3. Mostrar esos
 
 group Bolsines en estado Enviado [mientras haya bolsines]
     G -> B: buscarBolsinesEnEstadoEnviado()
     B -> B: esCMOrigenUsuario()
-    B -> estB: ()    
-
-
-
-
-    ' G->G: validarCM(cmUsuario,cmBolsin)
-    ' B -> estB: sosEnviado()    
-
-    
+    B -> estB: esActual()
+    estB -> Es: esEnviado()
 end
-' tendremos que hacer una entity gps tracker ?
-' es algo que segun entiendo tiene cada bolsin enviado
 
+G -> G: obtenerDatosLocalizacion()
+G -> GPS: obtenerLocalizacionBolsines()
+G -> G: generarMapaUbicBolsin()
+
+create entity ":Map" as M
+G -> M: generarMapa()
+G -> P: mostrarMapaParaSeleccion()
+EB -> P: seleccionBolsin()
+P -> G: tomarSeleccionBolsin()
+G -> G: consultarEnvioCorreoConUbicacionBolsin()
+G -> P: consultarEnvioCorreoConUbicacionADestinatario()
+EB -> P: tomarSeleccionConfirmacion()
+P -> G: tomarSeleccionEnvioCorreo()
+G -> G: buscarCorreoCMDestino()
+G -> SB: obtenerComisionMedicaDestino()
+SB -> CM: *esComisionMedicaDestino()
+SB -> SCM: obtenerCorreo()
+G -> G: llamarCU31NotificarUbicacion()
+G -> CU: include
+G -> P: notificarEjecucionExitosa()
+G -> G: finCU()
 @end
