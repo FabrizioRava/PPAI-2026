@@ -1,0 +1,105 @@
+@startuml DiagramaClasesCU36
+skinparam classAttributeIconSize 0
+
+' --- Estilos base ---
+skinparam class {
+    BackgroundColor<<boundary>> #E8F8F5
+    BackgroundColor<<control>> #FEF9E7
+    BackgroundColor<<entity>> #FFFFFF
+}
+
+' --- Clases de Interfaz (Boundary) ---
+class PantSegBolsines <<boundary>> {
+    + habilitarVentana(): void
+    + mostrarNombreCM(nombre: String): void
+    + mostrarLocalizacionBolsin(): void
+    + solicitarSeleccionBolsin(): void
+    + tomarSeleccionBolsin(): void
+    + solicitarSeleccionMail(): void
+    + tomarSeleccionMail(): void
+}
+
+class GPSTracker <<boundary>> {
+    + obtenerDatosLocalizacion(): List
+}
+
+class Mapa <<boundary>> {
+    + mostrarPosicionBolsines(): void
+}
+
+' --- Clases de Control ---
+class GestorSegBolsines <<control>> {
+    - codigoCM
+    - cmUusuarioLogueado
+    - buscarDatosLocalizacionBolsines
+    - nroPrecintoBolsin
+
+    + opConsultarUbicBolsines(): void
+    - buscarCMUsuarioLogueado(): void
+    - buscarEstadoBolsines(): void
+    - buscarDatosLocalizacionBolsines(): void
+    + tomarSeleccionBolsin(): void
+    - enviarMail(): void
+    + tomarSeleccionMail(): void
+}
+
+class CU31 <<control>> {
+    + llamarCUNotificacionMail(): void
+}
+
+' --- Clases de Entidad ---
+class Sesion <<entity>> {
+    + buscarUsuarioLogueado(): Usuario
+}
+
+class Usuario <<entity>> {
+    + obtenerEmpleado(): Empleado
+}
+
+class Empleado <<entity>> {
+    + obtenerNombreCM(): String
+    + obtenerCodigoCM(): String
+}
+
+class ComisionMedica <<entity>> {
+    + obtenerNombreCM(): String
+    + obtenerCodigoCM(): String
+}
+
+' Entidades con color personalizado
+class Bolsin <<entity>> #FFD1DC {
+    + buscarBolsinesEnEstadoEnviado(): List<Bolsin>
+    + esTuCMDeOrigen(cm: ComisionMedica): boolean
+    + obtenerNumeroPrecinto(): String
+}
+
+class CambioDeEstadoBolsin <<entity>> #FFD1DC {
+    + esActual(): boolean
+}
+
+class EstadoBolsin <<entity>> {
+    + sosEnviado(): boolean
+}
+
+' --- Relaciones / Asociaciones ---
+
+' Relaciones de la capa de presentación y control
+PantSegBolsines --> GestorSegBolsines : delega
+GestorSegBolsines --> PantSegBolsines : actualiza
+GestorSegBolsines --> GPSTracker : solicita datos
+GPSTracker --> Mapa : envía coordenadas
+GestorSegBolsines --> CU31 : incluye (include)
+
+' Relaciones del Gestor con las entidades (Navegabilidad desde el Controlador)
+GestorSegBolsines --> Sesion : consulta
+GestorSegBolsines --> Bolsin : consulta/filtra
+
+' Relaciones estructurales entre entidades
+Sesion --> Usuario : tiene >
+Usuario --> Empleado : es >
+Empleado --> ComisionMedica : pertenece a >
+
+Bolsin "1" *-- "1..*" CambioDeEstadoBolsin : registra >
+CambioDeEstadoBolsin "1..*" --> "1" EstadoBolsin : conoce >
+
+@enduml
